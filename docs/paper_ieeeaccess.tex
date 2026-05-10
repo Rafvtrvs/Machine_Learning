@@ -1,0 +1,218 @@
+%% IEEE Access paper — DRG prediction, Hospital El Pino
+%% Compile on Overleaf with the IEEE Access template files (ieeeaccess.cls, etc.).
+%% Upload this .tex plus your PNG figures to the same project folder.
+
+\documentclass{ieeeaccess}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\graphicspath{{../figures/}}
+
+\history{CINF104 --- Universidad Andr\'es Bello, 2026}
+\doi{Course project --- Machine Learning engineering}
+\dataDaDefesa{10{\slash}05{\slash}2026}
+
+\title{Predicting Diagnosis Related Groups From ICD-10 Codes: A Case Study at Hospital El Pino}
+
+\author{\uppercase{First Author}\authorrefmark{1},
+\uppercase{Second Author}\authorrefmark{1},
+\uppercase{Third Author}\authorrefmark{1}}
+
+\address[1]{Universidad Andr\'es Bello, Santiago, Chile (e-mail: student@unab.cl)}
+
+\tfootnote{Source code and data layout: \texttt{https://github.com/Rafvtrvs/Machine\_Learning}. Replace author names and e-mail as needed.}
+
+\markboth{UNAB CINF104}{UNAB CINF104}
+
+\corresp{Corresponding author: First Author (e-mail: student@unab.cl).}
+
+\begin{abstract}
+Public hospitals in Chile use Diagnosis Related Groups (DRGs) to categorize hospital episodes for financing and management. Manual assignment is error-prone given the size of ICD-10 coding systems. This work studies multi-class DRG prediction from real discharge data at Hospital El Pino (Santiago, Chile). We analyze 14{,}561 patient records with up to 35 diagnosis fields and 30 procedure fields, age, sex, and DRG labels. After ICD-10 code extraction and exploratory analysis, rare DRG classes with fewer than ten samples are filtered, yielding 229 classes and 13{,}454 records. Features are built with separate multi-label binarization for diagnoses and procedures, plus age and sex. Two models are compared: logistic regression (SAGA, sparse inputs) and random forest (100 trees, class balancing). On a stratified 80/20 split, random forest achieves weighted F1 $0.511$ and accuracy $0.521$, outperforming logistic regression. An out-of-bag error curve supports using 100 trees. Limitations include single-site data and persistent class imbalance.
+\end{abstract}
+
+\begin{keywords}
+Diagnosis related group, ICD-10, random forest, class imbalance, hospital coding
+\end{keywords}
+
+\titlepgskip=-15pt
+\maketitle
+
+\section{Introduction}
+\label{sec:intro}
+\PARstart{H}{ospitals} deal with thousands of patients every year, each with different diagnoses, treatments, and resource needs. To manage this complexity, the Diagnosis Related Group (DRG) system groups patients by clinical profile---diagnoses, procedures, age, and sex---and assigns a unique six-digit code. In Chile, public hospitals such as Hospital El Pino rely on this system for funding and operational benchmarking~\cite{who_icd10,averill_drg}.
+
+Assigning DRG codes manually is tedious and error-prone: clinicians must navigate large ICD-10 rule sets, and mistakes affect billing and resource planning~\cite{averill_drg}. A natural question is whether machine learning can predict DRG codes from structured patient data.
+
+Prior work suggests that tree-based and ensemble models help automate or approximate clinical grouping~\cite{goldfield2008,xie2018,mullenbach2018}. Large, multi-hospital datasets are common in the literature, but smaller institutions rarely have the same balance and volume. This study uses data from Hospital El Pino: 14{,}561 records with ICD-10 diagnosis and procedure codes, age, sex, and 526 DRG classes. We train and compare logistic regression and random forest, mitigating imbalance via rare-class filtering and balanced class weights.
+
+\section{Study Objectives}
+\label{sec:objectives}
+The general objective is to develop and evaluate machine learning models that predict DRG labels for patients at Hospital El Pino from ICD-10 codes, procedures, age, and sex.
+
+Specific objectives are: (1)~conduct exploratory data analysis (EDA) on completeness, outliers, class distribution, and clinical patterns; (2)~implement a preprocessing pipeline (code extraction, sparse multi-label encoding, filtering, class weights); (3)~train and compare logistic regression and random forest using accuracy, weighted F1, and macro F1, selecting the best model empirically.
+
+\section{Methodology}
+\label{sec:method}
+
+\subsection{Dataset Description}
+The dataset contains 14{,}561 inpatient records. Variables include primary and secondary diagnoses, primary and secondary procedures, age, sex, and a DRG label (six-digit code plus description). We denote the target column as GRD in the raw file. There is strong class imbalance: 297 of 526 DRG classes ($56.5\%$) have fewer than ten patients; a few classes hold most volume. Age shows one implausible value (121 years). Beyond the first diagnosis column, missing entries appear as ``-''.
+
+\subsection{Development Process}
+Stage~1 --- \emph{Loading and cleaning:} Data are read with a semicolon delimiter. ICD-10 codes are parsed with regular expressions. Placeholders ``-'' and NaNs are removed before feature construction.
+
+Stage~2 --- \emph{EDA:} We assess completeness, outliers, and class frequency; compute descriptive statistics; and plot age and sex distributions, DRG frequency, counts of codes per patient, diagnosis-column completeness, and frequent ICD-10 codes.
+
+Stage~3 --- \emph{Features and balancing:} Diagnoses and procedures are encoded separately with \texttt{MultiLabelBinarizer} (sparse binary columns). Age and sex are appended. Classes with fewer than ten training examples are dropped, reducing labels from 526 to 229 and retaining 13{,}454 patients. Remaining skew is handled with \texttt{class\_weight='balanced'}.
+
+Stage~4 --- \emph{Training and evaluation:} An 80/20 stratified train--test split is used. The primary criterion for model selection is weighted F1-score.
+
+\subsection{Machine Learning Techniques}
+Logistic regression serves as a linear baseline (SAGA solver, $C=0.1$, sparse-friendly). Random forest (100 trees, max depth 15, \texttt{max\_features='sqrt'}) is the main nonlinear candidate. Both use balanced class weights.
+
+\subsection{Evaluation Metrics}
+Accuracy alone can be misleading under imbalance. We report \emph{weighted} F1 (emphasizes frequent DRGs) and \emph{macro} F1 (equal weight per class). A large gap between them suggests that rare classes remain hard to predict.
+
+\section{Exploratory Data Analysis}
+\label{sec:eda}
+
+\subsection{Data Quality}
+\emph{Completeness:} Diag01 is complete for all records; completeness of secondary diagnosis columns decreases monotonically, reflecting sparse secondary coding. Procedures follow the same pattern. \emph{Correctness:} Primary diagnosis codes match the expected ICD-10 pattern; sex takes values Mujer/Hombre; GRD strings begin with six digits. \emph{Outliers:} One age value is 121; no negative ages. The age distribution is right-skewed (median 36 years), consistent with obstetric and pediatric volume.
+
+\subsection{Descriptive Statistics}
+Table~\ref{tab:desc} summarizes numeric summaries. Sex ratio is 9{,}617 female (66\%) vs.\ 4{,}944 male (34\%). Rare DRG classes jointly cover 1{,}107 patients (7.6\% of rows).
+
+\begin{table}[!t]
+\caption{Descriptive statistics of numeric constructs.}
+\label{tab:desc}
+\centering
+{\footnotesize
+\begin{tabular}{lrrrrrrr}
+\hline
+Variable & Count & Mean & Std & Min & 25\% & 50\% & 75\% \\
+\hline
+Age (years) & 14{,}561 & 39.4 & 24.7 & 0 & 23 & 36 & 60 \\
+Diag.\ per patient & 14{,}561 & 3.8 & 3.1 & 1 & 1 & 3 & 6 \\
+Proced.\ per patient & 14{,}561 & 4.2 & 5.6 & 0 & 0 & 2 & 7 \\
+\hline
+\end{tabular}}
+\end{table}
+
+\subsection{Visualizations}
+Figure~\ref{fig:overview} gives a multi-panel overview (age, sex, frequent DRGs, diagnosis/procedure counts, long-tail DRG counts). Figure~\ref{fig:completeness} shows completeness of diagnosis columns. Figure~\ref{fig:topcodes} shows the 15 most frequent diagnosis codes. The long-tail DRG pattern appears in the log-scale panel of Fig.~\ref{fig:overview}.
+
+\Figure[t!](topskip=0pt, botskip=0pt, midskip=0pt){eda_overview.png}
+{Exploratory overview: age, sex, top DRGs, diagnosis and procedure counts per patient, and DRG class frequency (log scale).\label{fig:overview}}
+
+\Figure[t!](topskip=0pt, botskip=0pt, midskip=0pt){eda_completeness.png}
+{Completeness of secondary diagnosis code columns (Diag02--Diag35).\label{fig:completeness}}
+
+\Figure[t!](topskip=0pt, botskip=0pt, midskip=0pt){eda_top_codes.png}
+{Fifteen most frequent ICD-10 diagnosis codes in the dataset.\label{fig:topcodes}}
+
+\section{Experiments}
+\label{sec:exp}
+
+\subsection{Features and Target}
+Inputs are ICD-10 diagnosis lists, procedure lists, age, and sex. Plain-text descriptions are dropped to limit dimensionality. The target is the six-digit DRG code; after filtering rare classes, 229 labels remain (13{,}454 patients).
+
+\subsection{Model Training Results}
+Training uses 10{,}763 samples and testing 2{,}691. Table~\ref{tab:models} summarizes metrics. Random forest improves weighted F1 by about 10.8 percentage points over logistic regression and is selected as the final model.
+
+\begin{table}[!t]
+\caption{Test-set comparison of classification models.}
+\label{tab:models}
+\centering
+\begin{tabular}{lccc}
+\hline
+\textbf{Model} & \textbf{Accuracy} & \textbf{F1 (w)} & \textbf{F1 (macro)} \\
+\hline
+Logistic regression & 0.405 & 0.403 & 0.270 \\
+Random forest & \textbf{0.521} & \textbf{0.511} & \textbf{0.316} \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Model Architecture and Training}
+Random forest averages 100 bootstrap-trained trees; each split uses a random feature subset (\texttt{max\_features='sqrt'}). Max depth is capped at 15 to limit overfitting. Balanced class weights reweight samples inversely to class frequency.
+
+The feature vector has 4{,}168 sparse binary dimensions: 3{,}342 diagnosis columns, 824 procedure columns, plus age and sex. Output is one of 229 DRG classes. Wall-clock training for the reported configuration is on the order of minutes on a standard PC.
+
+\textit{Architecture figures:} Place your pipeline diagram and RF schematic in the project as \texttt{fig\_pipeline.png} and \texttt{fig\_rf\_architecture.png}, then uncomment the following two lines.
+
+% \Figure[t!](topskip=0pt, botskip=0pt, midskip=0pt){fig_pipeline.png}
+% {End-to-end experimental pipeline (data, encoding, train, evaluate).\label{fig:pipeline}}
+% \Figure[t!](topskip=0pt, botskip=0pt, midskip=0pt){fig_rf_architecture.png}
+% {Random forest: parallel trees, majority vote over DRG classes.\label{fig:rf}}
+
+\subsection{Training Process Visualization}
+Figure~\ref{fig:oob} plots out-of-bag error versus the number of trees (5--100). Error drops quickly before roughly 50 trees and flattens after about 80, supporting the use of 100 estimators. Final OOB error near 0.56 is consistent with test accuracy $\approx 0.52$, suggesting limited overfitting.
+
+\Figure[t!](topskip=0pt, botskip=0pt, midskip=0pt){oob_curve.png}
+{Random forest out-of-bag error as a function of the number of trees.\label{fig:oob}}
+
+\subsection{Performance Analysis}
+Table~\ref{tab:topdrg} lists high-support test classes with strong F1 (obstetric/neonatal 146xxx DRGs). Classes with low recall (e.g., 044163) share codes with neighbors and have fewer examples. Weighted F1 $\approx 0.51$ vs.\ macro F1 $\approx 0.32$ reflects good performance on frequent labels and weaker behavior on rare labels.
+
+\begin{table}[!t]
+\caption{Example per-class test metrics (random forest).}
+\label{tab:topdrg}
+\centering
+{\footnotesize
+\begin{tabular}{lcccc}
+\hline
+\textbf{DRG} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{Supp.} \\
+\hline
+146101 & 0.83 & 0.90 & 0.86 & 163 \\
+146121 & 0.83 & 0.95 & 0.89 & 128 \\
+146131 & 0.86 & 0.88 & 0.87 & 108 \\
+061131 & 0.86 & 0.94 & 0.90 & 51 \\
+041023 & 0.72 & 0.94 & 0.82 & 50 \\
+044163 & 0.40 & 0.09 & 0.14 & 46 \\
+\hline
+\end{tabular}}
+\end{table}
+
+\subsection{Comparison with Related Work}
+Rule-based groupers on large Medicare-style corpora often reach higher reported accuracy than small single-hospital experiments~\cite{goldfield2008}. Benchmarks in the literature that use larger multi-site cohorts and heavy feature engineering frequently exceed our weighted F1 of 0.51; the gap is consistent with dataset size, 229 output classes after filtering, and a simple bag-of-code representation rather than embeddings or hierarchical models~\cite{mullenbach2018}.
+
+\section{Conclusions}
+\label{sec:conc}
+We built a reproducible pipeline for DRG prediction from Hospital El Pino data. EDA showed obstetric dominance, heavy imbalance, and sparse secondary fields. Sparse encoding plus filtering and class weighting enabled feasible training. Random forest outperformed logistic regression. Frequent DRGs are predicted reliably; rare DRGs remain difficult, consistent with data limits.
+
+\section{Limitations and Future Work}
+\label{sec:lim}
+Limitations include single-hospital scope, residual imbalance among 229 classes, independent binary coding of ICD tokens (no hierarchy), lack of gradient-boosted baselines (e.g., XGBoost, LightGBM), and a random split rather than a temporal validation design. Future work can explore hierarchical DRG prediction, clinically motivated embeddings, multi-site data, and chronologically split evaluation.
+
+\section*{Acknowledgment}
+The authors thank course instructors and Hospital El Pino for the anonymized teaching dataset.
+
+\begin{thebibliography}{00}
+
+\bibitem{who_icd10}
+World Health Organization, ``International Statistical Classification of Diseases and Related Health Problems, 10th Revision (ICD-10),'' WHO, 2019.
+
+\bibitem{averill_drg}
+R. F. Averill \emph{et al.}, ``Development of the Diagnosis Related Groups,'' in \emph{Proc. 3rd Ann. Symp.\ Comput.\ Appl.\ Med.\ Care}, 1989, pp. 475--482.
+
+\bibitem{goldfield2008}
+N. Goldfield \emph{et al.}, ``Identifying Potentially Preventable Readmissions,'' \emph{Health Aff.}, vol. 27, no. 2, pp. 430--436, 2008.
+
+\bibitem{xie2018}
+P. Xie and E. Xing, ``A Neural Architecture for Information Extraction from Clinical Text,'' in \emph{Proc.\ Workshop Mach.\ Learn.\ Health}, 2018.
+
+\bibitem{mullenbach2018}
+J. Mullenbach \emph{et al.}, ``Explainable Prediction of Medical Codes from Clinical Text,'' in \emph{Proc.\ Conf.\ North Amer.\ Chapter Assoc.\ Comput.\ Linguistics}, 2018, pp. 532--539.
+
+\end{thebibliography}
+
+\EOD
+
+\end{document}
