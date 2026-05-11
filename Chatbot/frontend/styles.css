@@ -18,16 +18,6 @@ h1 {
   color: #193e7c;
 }
 
-.chat-box p.thinking {
-  color: #64748b;
-  font-style: italic;
-}
-
-button:disabled {
-  opacity: 0.55;
-  cursor: wait;
-}
-
 .chat-box {
   height: 380px;
   overflow-y: auto;

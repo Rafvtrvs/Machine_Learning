@@ -9,27 +9,10 @@ Este proyecto implementa un chatbot inteligente para el dominio de **Psicología
 
 ## Instrucciones de Ejecución
 
-1. **Abrir terminal en la carpeta del proyecto** (donde están `launch.py`, `backend` y `frontend`).
-
-2. **Crear entorno virtual (solo la primera vez):**
+1. **Activar Entorno Virtual:**
    ```powershell
-   py -3.12 -m venv .venv
-   ```
-
-3. **Activar entorno virtual:**
-   ```powershell
-   .\.venv\Scripts\Activate.ps1
-   ```
-
-4. **Instalar dependencias:**
-   ```powershell
-   pip install -r requirements.txt
-   ```
-
-5. **Arrancar servidor (usa el puerto 8855):**
-   ```powershell
-   python launch.py
-   ```
-
-6. **Abrir interfaz:** en el navegador entrar a `http://127.0.0.1:8855/`  
-   *(No abras `index.html` desde el disco: la app se sirve por esa dirección junto al endpoint `/chat`.)*
+   .\.venv\Scripts\activate
+2. **Iniciar Backend**
+    uvicorn backend.main:app --reload
+3. **Abrir Interfaz**
+    Abrir Index.html en el navegador

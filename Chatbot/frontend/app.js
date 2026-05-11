@@ -4,7 +4,7 @@ const quickRepliesEl = document.getElementById("quick-replies");
 const sendBtn = document.getElementById("send-btn");
 const resetBtn = document.getElementById("reset-btn");
 
-const chatPath = `${window.location.origin}/chat`;
+const API_URL = "http://localhost:8000/chat";
 
 function getStoredContext() {
   const raw = localStorage.getItem("chatContext");
@@ -24,31 +24,18 @@ function setStoredContext(context) {
 function appendMessage(sender, message) {
   const p = document.createElement("p");
   const avatar = sender === "Bot" ? "🤖" : "👤";
-  p.innerHTML = `<b>${avatar}</b> ${message}`;
+  let formattedMessage = message
+      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+      .replace(/\n/g, '<br>');
+  p.innerHTML = `<b>${avatar} ${sender}:</b> ${formattedMessage}`;
   chatBox.appendChild(p);
   chatBox.scrollTop = chatBox.scrollHeight;
-  return p;
-}
 
-function appendThinking() {
-  const p = document.createElement("p");
-  p.className = "thinking";
-  p.innerHTML = "<b>🤖</b> Pensando… (Ollama puede tardar unos segundos)";
-  chatBox.appendChild(p);
-  chatBox.scrollTop = chatBox.scrollHeight;
-  return p;
-}
-
-function setSending(value) {
-  sendBtn.disabled = value;
-  resetBtn.disabled = value;
-  userInputEl.disabled = value;
 }
 
 async function sendMessage() {
   const userInput = userInputEl.value.trim();
   if (!userInput) return;
-  if (sendBtn.disabled) return;
 
   const currentHistory = getStoredContext();
 
@@ -56,77 +43,34 @@ async function sendMessage() {
   appendMessage("Tú", userInput);
   userInputEl.value = "";
 
-  const thinkingEl = appendThinking();
-  setSending(true);
-
-  const controller = new AbortController();
-  const to = setTimeout(() => controller.abort(), 130_000);
-
   try {
-    const response = await fetch(chatPath, {
+    const response = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message: userInput,
         context: currentHistory, 
       }),
-      signal: controller.signal,
     });
 
-    const rawBody = await response.text();
-
     if (!response.ok) {
-      let texto = `${response.status} ${response.statusText}`;
-      try {
-        const err = JSON.parse(rawBody);
-        if (err.detail != null) {
-          texto += ` — ${
-            typeof err.detail === "string" ? err.detail : JSON.stringify(err.detail)
-          }`;
-        }
-      } catch {
-        if (rawBody) texto += ` — ${rawBody.slice(0, 400)}`;
-      }
-      throw new Error(texto);
+      throw new Error(`Error en el servidor: ${response.status}`);
     }
 
-    const data = JSON.parse(rawBody);
-
-    if (typeof data.reply !== "string") {
-      throw new Error("El servidor no devolvió 'reply' como texto.");
-    }
-
-    thinkingEl.remove();
+    const data = await response.json();
+    
+   
     appendMessage("Bot", data.reply);
+    
+    
     setStoredContext(data.updated_context);
+
   } catch (error) {
-    thinkingEl.remove();
-    const mensaje =
-      error instanceof Error && error.message
-        ? error.message
-        : "⚠️ No se pudo completar la petición.";
-
-    const isAbort =
-      (error instanceof DOMException && error.name === "AbortError") ||
-      (error instanceof Error && error.name === "AbortError");
-
-    if (isAbort) {
-      appendMessage(
-        "Bot",
-        "⚠️ La petición tardó demasiado (más de 2 min). Ollama suele tardar al primer mensaje; prueba otra vez o revisa la consola donde corre python launch.py.",
-      );
-    } else if (mensaje.includes("Failed to fetch")) {
-      appendMessage(
-        "Bot",
-        "⚠️ No hay conexión con el servidor. ¿Está ejecutándose python launch.py y abriste http://127.0.0.1:8855?",
-      );
-    } else {
-      appendMessage("Bot", `⚠️ ${mensaje}`);
-    }
+    appendMessage(
+      "Bot",
+      "⚠️ Error de conexión. Asegúrate de que el backend y Ollama estén corriendo."
+    );
     console.error(error);
-  } finally {
-    clearTimeout(to);
-    setSending(false);
   }
 }
 
