@@ -21,15 +21,6 @@ Estructura de carpetas y archivos principales:
 - **`paper_single_column.tex`** — Informe en una columna (LaTeX); compilar desde la raíz del repo para que encuentre `figures/` y `tables/`.
 - **`.gitattributes`** — Configuración de Git (fines de línea, etc.).
 
-## Uso rápido del pipeline ML
-
-Desde la raíz del repositorio (donde existan `data/`, `figures/`, `results/`):
-
-```bash
-python src/eda_modelo.py
-```
-
-Asegúrate de que **`data/dataset_elpino.csv`** esté disponible si el script lo requiere.
 
 ## Enlace del repositorio
 
