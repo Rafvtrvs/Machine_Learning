@@ -18,7 +18,6 @@ Estructura de carpetas y archivos principales:
 ## Archivos en la raíz
 
 - **`README.md`** — Esta guía de estructura.
-- **`paper_single_column.tex`** — Informe en una columna (LaTeX); compilar desde la raíz del repo para que encuentre `figures/` y `tables/`.
 - **`.gitattributes`** — Configuración de Git (fines de línea, etc.).
 
 
