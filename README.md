@@ -12,7 +12,7 @@ Estructura de carpetas y archivos principales:
 | **`tables/`** | Capturas o tablas exportadas para el paper (p. ej. `Table_1.png`, `Table_2.png`, `Table_3.png`) — estadísticos descriptivos, comparación de modelos, métricas por clase. |
 | **`results/`** | Salidas tabulares del entrenamiento/evaluación (p. ej. `classification_report.csv`). |
 | **`Paper/`** | Versión PDF del informe o artículo (p. ej. variante IEEE). |
-| **`Chatbot/`** | Proyecto aparte: *frontend* (HTML/JS/CSS), *backend* (Python con FastAPI) y `launch.py`; ver `Chatbot/README.md` para ejecutarlo. |
+| **`Chatbot/`** | Proyecto aparte: chatbot fase 2 |
 | **`Video/`** | Material de video del proyecto (p. ej. demostración o presentación). |
 
 ## Archivos en la raíz
