@@ -1,0 +1,33 @@
+# Entornos virtuales (el profe los crea localmente)
+.venv/
+venv/
+venv-local/
+.venv-*/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Variables y secretos (nunca subir claves)
+.env
+.env.*
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs y artefactos locales
+*.log
+dist/
+build/
+
+# Entregables grandes (subir en Drive/LFS si hace falta)
+*.mp4

@@ -1,0 +1,87 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+}
+
+.chat-container {
+  max-width: 760px;
+  margin: 40px auto;
+  background: #dbeafe;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+}
+
+h1 {
+  margin-top: 0;
+  color: #193e7c;
+}
+
+.chat-box p.thinking {
+  color: #64748b;
+  font-style: italic;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.chat-box {
+  height: 380px;
+  overflow-y: auto;
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.quick-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.chip {
+  border: 1px solid #1e40af;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e2a78 55%, #0f1f4d 100%);
+  color: #e2e8f0;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.3;
+  border-radius: 24px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.chip:hover {
+  background: linear-gradient(135deg, #1e2a78 0%, #172554 55%, #0b173a 100%);
+}
+
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+}
+
+input {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+button {
+  border: none;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #1a3459;
+}
